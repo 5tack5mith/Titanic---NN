@@ -2,6 +2,7 @@ import pandas as pd
 import torch
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 # --- Load and preprocess (repeating Part 1 pipeline) ---
 df = pd.read_csv("data/titanic.csv")
@@ -112,3 +113,24 @@ plt.savefig("plots/loss_curve.png")
 plt.close()
 
 print("Loss curve saved to plots/loss_curve.png")
+
+model.eval()
+with torch.no_grad():
+    test_outputs = model(X_test_t)
+    test_preds = (test_outputs >= 0.5).float()
+
+y_true = y_test_t.numpy()
+y_pred = test_preds.numpy()
+
+acc = accuracy_score(y_true, y_pred)
+prec = precision_score(y_true, y_pred)
+rec = recall_score(y_true, y_pred)
+f1 = f1_score(y_true, y_pred)
+cm = confusion_matrix(y_true, y_pred)
+
+print(f"\nTest Accuracy:  {acc:.4f}")
+print(f"Test Precision: {prec:.4f}")
+print(f"Test Recall:    {rec:.4f}")
+print(f"Test F1-score:  {f1:.4f}")
+print("\nConfusion Matrix:")
+print(cm)

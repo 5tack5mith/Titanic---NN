@@ -74,3 +74,44 @@ at 100 epochs (hadn't converged yet).
 - Val loss being lower than train loss is likely explained by the specific random
   train/val split (134 validation rows is a small sample) happening to contain a
   favorable/easier mix of cases, rather than any methodological issue.
+
+## Part 5: Model Evaluation
+
+**Test set results:**
+- Accuracy:  76.12%
+- Precision: 69.39%
+- Recall:    66.67%
+- F1-score:  68.00%
+
+**Confusion Matrix:**
+
+[[68 15]
+[17 34]]
+
+(TN=68, FP=15, FN=17, TP=34)
+
+**Interpretation:** 76.12% accuracy is meaningfully above the 61.6% naive baseline
+(always predicting "died"), confirming the model learned real patterns rather than
+just exploiting class imbalance. FN (17) slightly exceeds FP (15), meaning the model
+is marginally more prone to missing real survivors than falsely flagging non-survivors.
+
+**Question 1: Is accuracy alone sufficient to judge this model?**
+No. 76.12% accuracy looks solid in isolation, but it hides that the model missed
+17 of 51 actual survivors (a 33% miss rate on the positive class) — a weakness
+invisible from the accuracy number alone. Given the moderate class imbalance
+(61.6%/38.4%), accuracy can mask uneven performance across classes.
+
+**Question 2: What does the confusion matrix tell you?**
+It breaks down performance by error type, not just error count. Here it shows the
+model makes both false positive (15) and false negative (17) errors at similar
+rates, with a slight skew toward missing real survivors (FN > FP). This is more
+diagnostic than accuracy alone, since it shows *how* the model is wrong, not just
+how often.
+
+**Question 3: Which metric would you prioritize if missing a positive prediction
+was particularly costly?**
+Recall, since Recall = TP/(TP+FN) directly measures how many real positive cases
+are caught. Current recall is 66.67% — in a scenario where false negatives are
+costly, this would need improving, commonly by lowering the classification
+threshold below 0.5 (trading some precision for recall) or weighting the loss
+function to penalize false negatives more heavily.
