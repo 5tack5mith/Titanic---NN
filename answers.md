@@ -47,4 +47,30 @@ male survival rate ~19%, a ~4x difference with non-overlapping confidence
 intervals. Consistent with the historical "women and children first" evacuation
 policy. Strong early signal the model should heavily weight this feature.
 
-## Part 3+ (to be filled in as we go)
+## Part 3-4: Model Architecture & Training
+
+**Architecture:** 3-layer feedforward network (MLP) — input(8) -> 16 -> 8 -> output(1),
+ReLU activations on hidden layers, Sigmoid on output (binary classification probability).
+~289 learnable parameters total. Small architecture deliberately chosen given the small
+dataset (623 training rows) to avoid excessive overfitting risk.
+
+**Loss function:** Binary Cross Entropy (BCELoss) — standard for binary classification,
+penalizes confident wrong predictions more heavily than uncertain ones.
+
+**Optimizer:** Adam, learning rate 0.001 — adaptive optimizer, generally faster and more
+stable convergence than plain SGD, 0.001 is a standard safe starting learning rate for Adam.
+
+**Epochs:** Extended from 100 to 300 after observing loss was still steadily decreasing
+at 100 epochs (hadn't converged yet).
+
+**Training/Validation loss behavior (300 epochs):**
+- Both losses decreased steadily and smoothly through ~epoch 120, then the curves
+  crossed — validation loss became consistently lower than training loss for the
+  remainder of training, ending at Train 0.404 / Val 0.359.
+- Both curves flattened/plateaued by roughly epoch 250-300, suggesting the model had
+  largely converged at this architecture/epoch combination.
+- No overfitting observed: overfitting specifically requires validation loss to rise
+  while training loss falls, which did not happen — both trended down together.
+- Val loss being lower than train loss is likely explained by the specific random
+  train/val split (134 validation rows is a small sample) happening to contain a
+  favorable/easier mix of cases, rather than any methodological issue.

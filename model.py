@@ -1,0 +1,114 @@
+import pandas as pd
+import torch
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+# --- Load and preprocess (repeating Part 1 pipeline) ---
+df = pd.read_csv("data/titanic.csv")
+
+df["Age"] = df["Age"].fillna(df["Age"].median())
+df["Embarked"] = df["Embarked"].fillna(df["Embarked"].mode()[0])
+df = df.drop(columns=["Cabin", "PassengerId", "Name", "Ticket"])
+
+df["Sex"] = df["Sex"].map({"male": 0, "female": 1})
+df = pd.get_dummies(df, columns=["Embarked"], drop_first=True)
+
+# convert one-hot True/False to actual 0/1 ints for PyTorch
+df["Embarked_Q"] = df["Embarked_Q"].astype(int)
+df["Embarked_S"] = df["Embarked_S"].astype(int)
+
+# --- Split features (X) and target (y) ---
+X = df.drop(columns=["Survived"])
+y = df["Survived"]
+
+# --- Train / Validation / Test split: 70/15/15 ---
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X, y, test_size=0.30, random_state=42, stratify=y
+)
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp, y_temp, test_size=0.50, random_state=42, stratify=y_temp
+)
+
+# --- Scale AFTER splitting, fit only on training data ---
+scaler = StandardScaler()
+numeric_cols = ["Age", "Fare", "SibSp", "Parch"]
+
+X_train[numeric_cols] = scaler.fit_transform(X_train[numeric_cols])
+X_val[numeric_cols] = scaler.transform(X_val[numeric_cols])
+X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
+
+# --- Convert everything to PyTorch tensors ---
+X_train_t = torch.tensor(X_train.values, dtype=torch.float32)
+X_val_t = torch.tensor(X_val.values, dtype=torch.float32)
+X_test_t = torch.tensor(X_test.values, dtype=torch.float32)
+
+y_train_t = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
+y_val_t = torch.tensor(y_val.values, dtype=torch.float32).view(-1, 1)
+y_test_t = torch.tensor(y_test.values, dtype=torch.float32).view(-1, 1)
+
+print("Train:", X_train_t.shape, y_train_t.shape)
+print("Val:  ", X_val_t.shape, y_val_t.shape)
+print("Test: ", X_test_t.shape, y_test_t.shape)
+
+
+import torch.nn as nn
+
+class TitanicNet(nn.Module):
+    def __init__(self, input_size):
+        super().__init__()
+        self.layer1 = nn.Linear(input_size, 16)
+        self.layer2 = nn.Linear(16, 8)
+        self.output = nn.Linear(8, 1)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.relu(self.layer1(x))
+        x = self.relu(self.layer2(x))
+        x = self.sigmoid(self.output(x))
+        return x
+
+model = TitanicNet(input_size=X_train_t.shape[1])
+print(model)
+
+# --- Loss function and optimizer ---
+criterion = nn.BCELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+epochs = 300
+
+train_losses = []
+val_losses = []
+
+for epoch in range(epochs):
+    model.train()
+    optimizer.zero_grad()
+    outputs = model(X_train_t)
+    loss = criterion(outputs, y_train_t)
+    loss.backward()
+    optimizer.step()
+
+    model.eval()
+    with torch.no_grad():
+        val_outputs = model(X_val_t)
+        val_loss = criterion(val_outputs, y_val_t)
+
+    train_losses.append(loss.item())
+    val_losses.append(val_loss.item())
+
+    if (epoch + 1) % 10 == 0:
+        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {loss.item():.4f} | Val Loss: {val_loss.item():.4f}")
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8,5))
+plt.plot(train_losses, label="Train Loss")
+plt.plot(val_losses, label="Validation Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.title("Training vs Validation Loss")
+plt.legend()
+plt.savefig("plots/loss_curve.png")
+plt.close()
+
+print("Loss curve saved to plots/loss_curve.png")
