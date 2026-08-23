@@ -155,3 +155,41 @@ across multiple training runs rather than relying on a single run.
 reducing model capacity (fewer neurons/layers), adding Dropout, L2 weight
 regularization, early stopping based on validation loss, or gathering more
 training data.
+
+## Part 7: Experiment — Comparing Model Variations
+
+**Setup:** Refactored the model into a parameterized FlexibleNet class, allowing
+architecture/hyperparameters to be swapped via arguments. Ran the baseline plus
+five variations, each changing exactly one setting relative to baseline, with a
+fixed random seed (42) before each model's creation to control for random weight
+initialization differences.
+
+**Results:**
+
+| Model                      | Accuracy | Recall | F1     |
+|-----------------------------|----------|--------|--------|
+| Baseline (2 layers, ReLU)   | 0.7463   | 0.6863 | 0.6731 |
+| Exp A: 1 hidden layer       | 0.7910   | 0.5882 | 0.6818 |
+| Exp B: Tanh activation      | 0.7687   | 0.6471 | 0.6804 |
+| Exp C: lr = 0.01            | 0.7463   | 0.6471 | 0.6600 |
+| Exp D: Dropout 0.3          | 0.7313   | 0.6667 | 0.6538 |
+| Exp E: 32-16 neurons        | 0.7537   | 0.6471 | 0.6667 |
+
+**Key observation:** No single model wins on every metric. Exp A (1 hidden layer)
+achieves the highest accuracy (79.10%) but the lowest recall (58.82%) by a wide
+margin — a clear illustration of the precision/recall tradeoff discussed in
+Part 5. The simpler model appears to lean more heavily toward predicting the
+majority class, inflating accuracy at the direct cost of missing real survivors.
+
+**Model chosen: Baseline (2 hidden layers, ReLU).** Per the Part 5 Question 3
+reasoning (recall should be prioritized when false negatives are costly),
+Baseline has the best recall of all six models (68.63%). Its accuracy is a few
+points below Exp A's, but that tradeoff is justified given recall was
+established as the more important metric for this type of problem — choosing
+Exp A for its higher accuracy would mean accepting significantly worse
+performance on exactly the failure mode identified as costly.
+
+**Secondary observation:** Dropout (Exp D) and increased neuron count (Exp E)
+did not improve results over baseline. This is consistent with the Part 6
+finding that the baseline model was not overfitting — Dropout is specifically
+an overfitting mitigation technique, so its limited effect here
