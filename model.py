@@ -120,6 +120,9 @@ plt.legend()
 plt.savefig("plots/loss_curve.png")
 plt.close()
 
+torch.save(model.state_dict(), "trained_model.pt")
+print("Model saved to trained_model.pt")
+
 print("Loss curve saved to plots/loss_curve.png")
 
 plt.figure(figsize=(8,5))

@@ -219,3 +219,93 @@ suggests it is weighing multiple features together rather than relying on a
 single dominant shortcut rule (e.g., "if male, always predict low"). This is a
 more convincing sign of genuine multi-feature learning than the confident
 predictions on the other four, more clear-cut passengers.
+
+## Bonus 1: Hyperparameter Tuning
+
+Ran a grid search over 3 learning rates (0.001, 0.01, 0.0001) x 3 architectures
+(small [8], medium [16,8] = baseline, large [32,16]) = 9 total combinations,
+using a fixed random seed before each model's creation for fair comparison.
+
+**Best combination:** LR=0.001, Architecture=large [32,16] — Accuracy 78.36%,
+Recall 68.63%, F1 0.7071 (best F1 across the entire project so far, edging out
+the original baseline's 0.6731).
+
+**Key finding — underfitting demonstrated directly:** LR=0.0001 produced Recall
+and F1 of exactly 0.0000 for both the small and large architectures, meaning the
+model predicted "died" for every single test passenger. This is a concrete,
+reproducible example of underfitting: the learning rate was too small for 200
+epochs to move the weights meaningfully past their random starting point, likely
+never reaching the sharp "signal discovery" jump seen around epoch 55-65 in the
+baseline's own accuracy curve (Part 6).
+
+**General pattern:** LR=0.001 consistently outperformed both LR=0.01 (moderate,
+less stable) and LR=0.0001 (too slow, near-collapse) across all three
+architectures, validating the original baseline's learning rate choice.
+
+## Bonus 2: Model Comparison — Neural Network vs Classical ML
+
+Trained Logistic Regression, Decision Tree (max_depth=5), and Random Forest
+(100 trees, max_depth=5) on the identical preprocessed train/test split used
+for the neural network.
+
+| Model                      | Accuracy | Recall | F1     |
+|------------------------------|----------|--------|--------|
+| Logistic Regression         | 0.7388   | 0.6863 | 0.6667 |
+| Decision Tree                | 0.7537   | 0.5098 | 0.6118 |
+| Random Forest                 | 0.7761   | 0.6078 | 0.6739 |
+| Neural Network (baseline)    | 0.7463   | 0.6863 | 0.6731 |
+
+**Key finding:** Logistic Regression — mathematically the simplest possible
+model (equivalent to a neural network with zero hidden layers) — matched the
+Neural Network's recall exactly (68.63%) and scored close on F1. This is strong
+evidence that survival patterns in this dataset are largely linear/simple
+enough that a full neural network's hidden-layer capacity for learning
+nonlinear feature interactions isn't providing a decisive advantage here.
+
+Decision Tree underperformed on recall (50.98%) relative to the ensemble
+Random Forest (60.78%), illustrating why ensembling exists: a single tree is
+more sensitive/unstable to which specific rows land in train vs test on a
+small dataset, and Random Forest's averaging over many trees smooths this out.
+
+**Conclusion:** Given recall was established as the priority metric (Part 5,
+Q3), Logistic Regression and the Neural Network are effectively tied as the
+best choices, with Logistic Regression achieving this with far less complexity
+and computational cost. The neural network remains a valid, competitive choice,
+and fulfills the task's explicit goal of demonstrating NN fundamentals, but
+this comparison shows it is not strictly necessary for this dataset.
+
+## Bonus 3: Explainability — Permutation Feature Importance
+
+Used permutation importance on the trained (saved/reloaded) baseline neural
+network: for each feature, shuffled its values in the test set (breaking its
+relationship to the target while keeping all other features intact), and
+measured the resulting drop in test accuracy relative to baseline (76.12%).
+
+| Feature     | Accuracy after shuffle | Importance (accuracy drop) |
+|--------------|--------------------------|------------------------------|
+| Sex          | 0.5672                   | 0.1940                        |
+| SibSp        | 0.7164                   | 0.0448                        |
+| Age          | 0.7239                   | 0.0373                        |
+| Parch        | 0.7463                   | 0.0149                        |
+| Pclass       | 0.7537                   | 0.0075                        |
+| Embarked_Q   | 0.7537                   | 0.0075                        |
+| Fare         | 0.7687                   | -0.0075                       |
+| Embarked_S   | 0.7687                   | -0.0075                       |
+
+**Key finding:** Sex is overwhelmingly the most important feature — shuffling
+it alone drops accuracy by 19.4 percentage points, roughly 4-5x larger than
+the next most important features (SibSp, Age). This directly confirms the EDA
+observation from Part 2 (female survival ~74% vs male ~19%) using an
+independent, model-based method rather than just visual inspection.
+
+Fare and Embarked_S showed small negative importance values, which is
+attributable to sampling noise given the small (134-row) test set — a
+single flipped prediction is worth ~0.0075 in accuracy, matching the
+magnitude seen here — rather than a genuine negative effect. A more robust
+estimate would average multiple permutation repeats per feature.
+
+**Connection to Bonus 2:** Sex's dominant, near-linear relationship with
+survival helps explain why Logistic Regression performed comparably to the
+Neural Network — when one feature carries most of the signal in a fairly
+direct way, a simple linear model can capture much of that relationship
+without needing hidden-layer nonlinearity.
