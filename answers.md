@@ -115,3 +115,43 @@ are caught. Current recall is 66.67% — in a scenario where false negatives are
 costly, this would need improving, commonly by lowering the classification
 threshold below 0.5 (trading some precision for recall) or weighting the loss
 function to penalize false negatives more heavily.
+
+## Part 6: Training Analysis
+
+**Loss curves:** Training and validation loss both decreased steadily and smoothly
+throughout training. From roughly epoch 120 onward, validation loss stayed
+consistently below training loss, and both curves flattened/plateaued by around
+epoch 250-300.
+
+**Accuracy curves:** Both train and validation accuracy stayed flat around ~38%
+(near the minority class proportion) for the first ~50 epochs, indicating the
+model had not yet found a useful signal. Around epoch 55-65 there was a sharp jump
+to ~75-80% accuracy, consistent with the model rapidly learning to exploit a
+strong feature (likely Sex, given its dominance in EDA). From roughly epoch 130
+onward, validation accuracy consistently sat above training accuracy, ending at
+Val 85.8% vs Train 82.0%.
+
+**Overfitting/underfitting diagnosis:** No overfitting observed. Overfitting
+specifically requires validation performance to plateau or worsen while training
+performance keeps improving — instead, both loss and accuracy improved together
+throughout training, with validation performing as well as or better than
+training. No underfitting either, given the model clearly moved well beyond the
+naive 61.6% baseline.
+
+**Note on validation outperforming training:** This is consistent across both
+loss and accuracy, and stable over 150+ epochs, not just noise. Most likely
+explanation is sampling variance — the validation set is only 134 rows, so
+which specific passengers land in that split by chance can meaningfully shift
+its average difficulty relative to the 623-row training set. A more rigorous
+setup (e.g., k-fold cross-validation) would help confirm this, and is noted as
+a possible extension.
+
+**Run-to-run variance note:** Test accuracy varied slightly between two training
+runs on identical code (76.12% vs 75.37%), because neural network weights are
+randomly initialized each run. A more robust evaluation would average results
+across multiple training runs rather than relying on a single run.
+
+**If overfitting had been observed, mitigation strategies would include:**
+reducing model capacity (fewer neurons/layers), adding Dropout, L2 weight
+regularization, early stopping based on validation loss, or gathering more
+training data.

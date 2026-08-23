@@ -80,7 +80,8 @@ epochs = 300
 
 train_losses = []
 val_losses = []
-
+train_accs = []
+val_accs = []
 for epoch in range(epochs):
     model.train()
     optimizer.zero_grad()
@@ -94,11 +95,18 @@ for epoch in range(epochs):
         val_outputs = model(X_val_t)
         val_loss = criterion(val_outputs, y_val_t)
 
+        train_preds = (outputs >= 0.5).float()
+        val_preds = (val_outputs >= 0.5).float()
+        train_acc = (train_preds == y_train_t).float().mean().item()
+        val_acc = (val_preds == y_val_t).float().mean().item()
+
     train_losses.append(loss.item())
     val_losses.append(val_loss.item())
+    train_accs.append(train_acc)
+    val_accs.append(val_acc)
 
     if (epoch + 1) % 10 == 0:
-        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {loss.item():.4f} | Val Loss: {val_loss.item():.4f}")
+        print(f"Epoch {epoch+1}/{epochs} | Train Loss: {loss.item():.4f} | Val Loss: {val_loss.item():.4f} | Train Acc: {train_acc:.4f} | Val Acc: {val_acc:.4f}")
 
 import matplotlib.pyplot as plt
 
@@ -113,6 +121,18 @@ plt.savefig("plots/loss_curve.png")
 plt.close()
 
 print("Loss curve saved to plots/loss_curve.png")
+
+plt.figure(figsize=(8,5))
+plt.plot(train_accs, label="Train Accuracy")
+plt.plot(val_accs, label="Validation Accuracy")
+plt.xlabel("Epoch")
+plt.ylabel("Accuracy")
+plt.title("Training vs Validation Accuracy")
+plt.legend()
+plt.savefig("plots/accuracy_curve.png")
+plt.close()
+
+print("Accuracy curve saved to plots/accuracy_curve.png")
 
 model.eval()
 with torch.no_grad():
