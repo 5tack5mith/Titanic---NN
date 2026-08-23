@@ -193,3 +193,29 @@ performance on exactly the failure mode identified as costly.
 did not improve results over baseline. This is consistent with the Part 6
 finding that the baseline model was not overfitting — Dropout is specifically
 an overfitting mitigation technique, so its limited effect here
+
+## Part 8: Predictions on Unseen Samples
+
+Constructed 5 hypothetical passengers spanning a range of profiles, scaled using
+the training-set-derived scaler (never refit on these 5 rows, consistent with
+avoiding data leakage at inference time).
+
+| Passenger | Profile                                          | Probability | Prediction        |
+|-----------|---------------------------------------------------|--------------|--------------------|
+| 1         | 1st class, female, 28, alone, high fare            | 0.9276       | Survived           |
+| 2         | 3rd class, male, 22, alone, low fare               | 0.1096       | Did Not Survive    |
+| 3         | 2nd class, female, 4, with family, moderate fare   | 0.9046       | Survived           |
+| 4         | 3rd class, male, 35, alone, low fare, Queenstown   | 0.1336       | Did Not Survive    |
+| 5         | 1st class, male, 60, with spouse, high fare        | 0.3932       | Did Not Survive    |
+
+**Discussion:** Passengers 1-4 were predicted with high confidence (all
+probabilities either >90% or <14%), consistent with EDA findings that class,
+sex, and family accompaniment are strong survival predictors. Passenger 5 is
+the most interesting case: unlike the other four, its probability (39.3%) sits
+much closer to the 0.5 decision boundary. This passenger has competing signals
+— high class and spousal accompaniment favor survival, while older age and male
+sex work against it — and the model's less-confident, near-boundary output
+suggests it is weighing multiple features together rather than relying on a
+single dominant shortcut rule (e.g., "if male, always predict low"). This is a
+more convincing sign of genuine multi-feature learning than the confident
+predictions on the other four, more clear-cut passengers.

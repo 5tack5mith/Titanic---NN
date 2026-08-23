@@ -154,3 +154,26 @@ print(f"Test Recall:    {rec:.4f}")
 print(f"Test F1-score:  {f1:.4f}")
 print("\nConfusion Matrix:")
 print(cm)
+
+# --- Part 8: Predictions on unseen samples ---
+new_passengers = pd.DataFrame({
+    "Pclass": [1, 3, 2, 3, 1],
+    "Sex": [1, 0, 1, 0, 0],
+    "Age": [28, 22, 4, 35, 60],
+    "SibSp": [0, 0, 1, 0, 1],
+    "Parch": [0, 0, 1, 0, 0],
+    "Fare": [100, 7.5, 30, 8, 90],
+    "Embarked_Q": [0, 0, 0, 1, 0],
+    "Embarked_S": [1, 1, 1, 0, 1],
+})
+
+new_passengers[numeric_cols] = scaler.transform(new_passengers[numeric_cols])
+new_passengers_t = torch.tensor(new_passengers.values, dtype=torch.float32)
+
+model.eval()
+with torch.no_grad():
+    new_probs = model(new_passengers_t)
+    new_preds = (new_probs >= 0.5).float()
+
+for i in range(len(new_passengers)):
+    print(f"Passenger {i+1}: probability={new_probs[i].item():.4f}, prediction={'Survived' if new_preds[i].item()==1 else 'Did Not Survive'}")
