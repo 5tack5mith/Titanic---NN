@@ -32,26 +32,22 @@ linear/simple — full discussion in `answers.md`, Bonus 2.
 ## Project Structure
 
 titanic-nn-project/
-├── data/
-│ └── titanic.csv # dataset (auto-downloaded via download_data.py)
-├── plots/
-│ ├── survival_count.png
-│ ├── survival_by_sex.png
-│ ├── loss_curve.png
-│ ├── accuracy_curve.png
-│ └── feature_importance.png
-├── download_data.py # fetches and saves the Titanic dataset
-├── explore_data.py # Part 1: preprocessing exploration
-├── eda.py # Part 2: exploratory data analysis
-├── model.py # Parts 3-5, 8: model build, train, evaluate, predict
-├── experiments.py # Part 7: 5-way architecture/hyperparameter experiment
-├── hyperparameter_tuning.py # Bonus 1: grid search over LR x architecture
-├── classical_comparison.py # Bonus 2: NN vs Logistic Regression / Decision Tree / Random Forest
-├── explainability.py # Bonus 3: permutation feature importance
-├── trained_model.pt # saved weights of the trained baseline model
-├── answers.md # full write-up, reasoning, and task question answers
+├── data/                        # dataset folder (auto-created by download_data.py)
+├── plots/                       # all generated charts (EDA, loss/accuracy curves, feature importance)
+├── venv/                        # virtual environment (not committed, see .gitignore)
+├── sanity_check.py              # initial PyTorch install verification
+├── download_data.py             # fetches and saves the Titanic dataset
+├── explore_data.py              # Part 1: preprocessing exploration
+├── eda.py                       # Part 2: exploratory data analysis
+├── model.py                     # Parts 3-5, 6, 8: model build, train, evaluate, curves, predict
+├── experiments.py               # Part 7: 5-way architecture/hyperparameter experiment
+├── hyperparameter_tuning.py     # Bonus 1: grid search over LR x architecture
+├── classical_comparison.py      # Bonus 2: NN vs Logistic Regression / Decision Tree / Random Forest
+├── explainability.py            # Bonus 3: permutation feature importance
+├── trained_model.pt             # saved weights of the trained baseline model
+├── answers.md                   # full write-up, reasoning, and task question answers
+├── README.md
 └── requirements.txt
-
 
 ## How to Run
 
