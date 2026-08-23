@@ -30,7 +30,7 @@ exactly (68.63%), suggesting survival patterns in this dataset are largely
 linear/simple — full discussion in `answers.md`, Bonus 2.
 
 ## Project Structure
-
+```
 titanic-nn-project/
 ├── data/                        # dataset folder (auto-created by download_data.py)
 ├── plots/                       # all generated charts (EDA, loss/accuracy curves, feature importance)
@@ -48,7 +48,7 @@ titanic-nn-project/
 ├── answers.md                   # full write-up, reasoning, and task question answers
 ├── README.md
 └── requirements.txt
-
+```
 ## How to Run
 
 ```bash
